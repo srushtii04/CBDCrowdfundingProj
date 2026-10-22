@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DeFi Crowdfunding DApp</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px 50px;
+        }
+
+        header {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin: 0 0 10px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .subtitle {
+            color: #667085;
+            margin-bottom: 20px;
+        }
+
+        .wallet {
+            background: #eef4ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            word-break: break-all;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.07);
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccd3dd;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .secondary {
+            background: #475467;
+        }
+
+        .secondary:hover {
+            background: #344054;
+        }
+
+        .danger {
+            background: #dc2626;
+        }
+
+        .danger:hover {
+            background: #b91c1c;
+        }
+
+        .info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 12px;
+        }
+
+        .info div {
+            margin: 8px 0;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #eef2ff;
+            color: #1e293b;
+            word-break: break-word;
+        }
+
+        .success {
+            background: #ecfdf3;
+            color: #027a48;
+        }
+
+        .error {
+            background: #fef3f2;
+            color: #b42318;
+        }
+
+        .address {
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        @media (max-width: 800px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>DeFi Crowdfunding DApp</h1>
+
+        <p class="subtitle">
+            Decentralized crowdfunding with CFT rewards and an ETH/CFT AMM liquidity pool.
+        </p>
+
+        <button onclick="connectWallet()">
+            Connect MetaMask
+        </button>
+
+        <div class="wallet">
+            <strong>Wallet:</strong>
+            <div id="walletAddress">Not connected</div>
+
+            <br>
+
+            <strong>Network:</strong>
+            <div id="networkName">Not connected</div>
+        </div>
+    </header>
+
+
+    <div class="grid">
+
+        <!-- CAMPAIGN -->
+        <section class="card">
+
+            <h2>Create Campaign</h2>
+
+            <label for="goal">
+                Goal (ETH)
+            </label>
+
+            <input
+                id="goal"
+                type="number"
+                step="0.0001"
+                placeholder="Example: 0.1"
+            >
+
+            <label for="duration">
+                Duration (seconds)
+            </label>
+
+            <input
+                id="duration"
+                type="number"
+                placeholder="Example: 3600"
+            >
+
+            <button onclick="createCampaign()">
+                Create Campaign
+            </button>
+
+        </section>
+
+
+        <!-- CONTRIBUTE -->
+        <section class="card">
+
+            <h2>Contribute</h2>
+
+            <p>
+                Contributors receive CFT tokens automatically.
+            </p>
+
+            <label for="campaignId">
+                Campaign ID
+            </label>
+
+            <input
+                id="campaignId"
+                type="number"
+                placeholder="Example: 1"
+            >
+
+            <label for="contributionAmount">
+                Contribution (ETH)
+            </label>
+
+            <input
+                id="contributionAmount"
+                type="number"
+                step="0.0001"
+                placeholder="Example: 0.01"
+            >
+
+            <button onclick="contribute()">
+                Contribute ETH
+            </button>
+
+        </section>
+
+
+        <!-- CFT BALANCE -->
+        <section class="card">
+
+            <h2>CFT Token</h2>
+
+            <div class="info">
+
+                <div>
+                    <strong>Token:</strong>
+                    Campaign Token (CFT)
+                </div>
+
+                <div>
+                    <strong>Your CFT Balance:</strong>
+                    <span id="cftBalance">-</span>
+                </div>
+
+            </div>
+
+            <button onclick="refreshBalances()">
+                Refresh Balance
+            </button>
+
+        </section>
+
+
+        <!-- CAMPAIGN INFO -->
+        <section class="card">
+
+            <h2>Campaign Information</h2>
+
+            <label for="viewCampaignId">
+                Campaign ID
+            </label>
+
+            <input
+                id="viewCampaignId"
+                type="number"
+                placeholder="Example: 1"
+            >
+
+            <button onclick="getCampaignInfo()">
+                View Campaign
+            </button>
+
+            <div class="info">
+
+                <div>
+                    <strong>Creator:</strong>
+                    <span id="campaignCreator">-</span>
+                </div>
+
+                <div>
+                    <strong>Goal:</strong>
+                    <span id="campaignGoal">-</span>
+                </div>
+
+                <div>
+                    <strong>Raised:</strong>
+                    <span id="campaignRaised">-</span>
+                </div>
+
+                <div>
+                    <strong>Deadline:</strong>
+                    <span id="campaignDeadline">-</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ADD LIQUIDITY -->
+        <section class="card">
+
+            <h2>Add Liquidity</h2>
+
+            <p>
+                Deposit ETH and CFT into the AMM.
+            </p>
+
+            <label for="liquidityEth">
+                ETH Amount
+            </label>
+
+            <input
+                id="liquidityEth"
+                type="number"
+                step="0.0001"
+                placeholder="Example: 0.01"
+            >
+
+            <label for="liquidityToken">
+                CFT Amount
+            </label>
+
+            <input
+                id="liquidityToken"
+                type="number"
+                step="0.01"
+                placeholder="Example: 10"
+            >
+
+            <button onclick="addLiquidity()">
+                Add Liquidity
+            </button>
+
+        </section>
+
+
+        <!-- REMOVE LIQUIDITY -->
+        <section class="card">
+
+            <h2>Remove Liquidity</h2>
+
+            <p>
+                Burn your LP shares and receive the proportional ETH/CFT reserves.
+            </p>
+
+            <label for="lpShares">
+                LP Shares
+            </label>
+
+            <input
+                id="lpShares"
+                type="number"
+                step="0.000000000000000001"
+                placeholder="Example: 0.01"
+            >
+
+            <button
+                class="danger"
+                onclick="removeLiquidity()"
+            >
+                Remove Liquidity
+            </button>
+
+        </section>
+
+
+        <!-- ETH TO CFT -->
+        <section class="card">
+
+            <h2>Swap ETH → CFT</h2>
+
+            <p>
+                Buy CFT using ETH from the AMM.
+            </p>
+
+            <label for="ethSwapAmount">
+                ETH Amount
+            </label>
+
+            <input
+                id="ethSwapAmount"
+                type="number"
+                step="0.0001"
+                placeholder="Example: 0.001"
+            >
+
+            <button onclick="swapETHForCFT()">
+                Swap ETH for CFT
+            </button>
+
+        </section>
+
+
+        <!-- CFT TO ETH -->
+        <section class="card">
+
+            <h2>Swap CFT → ETH</h2>
+
+            <p>
+                Sell CFT for ETH through the AMM.
+            </p>
+
+            <label for="cftSwapAmount">
+                CFT Amount
+            </label>
+
+            <input
+                id="cftSwapAmount"
+                type="number"
+                step="0.01"
+                placeholder="Example: 1"
+            >
+
+            <button onclick="swapCFTForETH()">
+                Swap CFT for ETH
+            </button>
+
+        </section>
+
+
+        <!-- AMM -->
+        <section class="card full">
+
+            <h2>AMM Pool</h2>
+
+            <div class="info">
+
+                <div>
+                    <strong>ETH Reserve:</strong>
+                    <span id="reserveETH">-</span>
+                </div>
+
+                <div>
+                    <strong>CFT Reserve:</strong>
+                    <span id="reserveCFT">-</span>
+                </div>
+
+                <div>
+                    <strong>Your LP Shares:</strong>
+                    <span id="userLPShares">-</span>
+                </div>
+
+                <div>
+                    <strong>Total LP Shares:</strong>
+                    <span id="totalLPShares">-</span>
+                </div>
+
+                <div>
+                    <strong>Constant Product K:</strong>
+                    <span id="poolK">-</span>
+                </div>
+
+            </div>
+
+            <button
+                class="secondary"
+                onclick="refreshPool()"
+            >
+                Refresh Pool
+            </button>
+
+        </section>
+
+    </div>
+
+
+    <div id="statusBox" class="status">
+        Connect MetaMask to begin.
+    </div>
+
+</div>
+
+
+<!-- ethers.js v6 -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.17.0/dist/ethers.umd.min.js"></script>
+
+<script src="app.js"></script>
+
+</body>
+</html>

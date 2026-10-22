@@ -1,7 +1,9 @@
 const Crowdfunding = artifacts.require("Crowdfunding");
 const Governance = artifacts.require("Governance");
 
-module.exports = function(deployer) {
-  deployer.deploy(Crowdfunding);
-  deployer.deploy(Governance);
+module.exports = async function(deployer) {
+  await deployer.deploy(Crowdfunding);
+  const crowdfunding = await Crowdfunding.deployed();
+
+  await deployer.deploy(Governance, crowdfunding.address);
 };
