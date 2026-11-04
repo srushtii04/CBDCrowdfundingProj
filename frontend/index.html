@@ -232,7 +232,7 @@
             <h2>Contribute</h2>
 
             <p>
-                Contributors receive CFT tokens automatically.
+                Contributors can claim CFT after a campaign reaches its goal.
             </p>
 
             <label for="campaignId">
@@ -260,6 +260,13 @@
                 Contribute ETH
             </button>
 
+        </section>
+
+        <section class="card">
+            <h2>Claim CFT Reward</h2>
+            <label for="claimCampaignId">Campaign ID</label>
+            <input id="claimCampaignId" type="number" placeholder="Example: 1">
+            <button onclick="claimCampaignTokens()">Claim CFT</button>
         </section>
 
 
@@ -403,56 +410,58 @@
         </section>
 
 
-        <!-- ETH TO CFT -->
-        <section class="card">
+        <!-- DEX SWAP -->
+        <section class="card full">
 
-            <h2>Swap ETH → CFT</h2>
+            <h2>Experiment 6 DEX</h2>
 
             <p>
-                Buy CFT using ETH from the AMM.
+                Swap against the intentional ETH/CFT liquidity pool. Slippage is
+                enforced by the AMM transaction, not only by this interface.
             </p>
 
-            <label for="ethSwapAmount">
-                ETH Amount
-            </label>
+            <div class="grid">
+                <div>
+                    <label for="swapFrom">From</label>
+                    <select id="swapFrom" onchange="updateSwapToToken()">
+                        <option value="ETH">ETH</option>
+                        <option value="CFT">CFT</option>
+                    </select>
+                </div>
+                <div>
+                    <label>To</label>
+                    <div class="info" id="swapTo">CFT</div>
+                </div>
+            </div>
 
+            <label for="swapAmount">Amount</label>
             <input
-                id="ethSwapAmount"
+                id="swapAmount"
                 type="number"
-                step="0.0001"
-                placeholder="Example: 0.001"
+                min="0"
+                step="0.000000000000000001"
+                placeholder="Example: 0.01 ETH"
+                oninput="updateSwapEstimate()"
             >
 
-            <button onclick="swapETHForCFT()">
-                Swap ETH for CFT
-            </button>
-
-        </section>
-
-
-        <!-- CFT TO ETH -->
-        <section class="card">
-
-            <h2>Swap CFT → ETH</h2>
-
-            <p>
-                Sell CFT for ETH through the AMM.
-            </p>
-
-            <label for="cftSwapAmount">
-                CFT Amount
-            </label>
-
+            <label for="swapSlippage">Slippage tolerance (%)</label>
             <input
-                id="cftSwapAmount"
+                id="swapSlippage"
                 type="number"
+                min="0"
+                max="99.99"
                 step="0.01"
-                placeholder="Example: 1"
+                value="0.5"
+                oninput="updateSwapEstimate()"
             >
 
-            <button onclick="swapCFTForETH()">
-                Swap CFT for ETH
-            </button>
+            <div class="info">
+                <div><strong>Estimated output:</strong> <span id="swapEstimate">-</span></div>
+                <div><strong>ETH balance:</strong> <span id="ethBalance">-</span></div>
+                <div><strong>CFT balance:</strong> <span id="dexCftBalance">-</span></div>
+            </div>
+
+            <button onclick="swapDex()">Swap</button>
 
         </section>
 
@@ -489,6 +498,16 @@
                     <span id="poolK">-</span>
                 </div>
 
+                <div>
+                    <strong>Spot price (1 CFT):</strong>
+                    <span id="priceEthPerCft">-</span>
+                </div>
+
+                <div>
+                    <strong>Spot price (1 ETH):</strong>
+                    <span id="priceCftPerEth">-</span>
+                </div>
+
             </div>
 
             <button
@@ -512,6 +531,9 @@
 
 <!-- ethers.js v6 -->
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.17.0/dist/ethers.umd.min.js"></script>
+
+<!-- Replace the values in this file with the addresses from the Ganache deployment. -->
+<script src="local-contracts.js"></script>
 
 <script src="app.js"></script>
 

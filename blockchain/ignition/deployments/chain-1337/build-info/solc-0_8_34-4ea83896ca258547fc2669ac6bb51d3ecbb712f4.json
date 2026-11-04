@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_34-4ea83896ca258547fc2669ac6bb51d3ecbb712f4",
+  "solcVersion": "0.8.34",
+  "solcLongVersion": "0.8.34+commit.80d5c536",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.17.0"
+  },
+  "userSourceNameMap": {
+    "contracts/Crowdfunding.sol": "project/contracts/Crowdfunding.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "paris",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/Crowdfunding.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\ninterface ICampaignToken {\n    function mint(address to, uint256 amount) external;\n}\n\ncontract Crowdfunding {\n    struct Campaign {\n        address creator;\n        uint256 goal;\n        uint256 deadline;\n        uint256 amountRaised;\n        bool withdrawn;\n    }\n\n    uint256 public campaignCount;\n    uint256 public constant TOKENS_PER_ETH = 1000;\n    ICampaignToken public immutable campaignToken;\n\n    mapping(uint256 => Campaign) public campaigns;\n    mapping(uint256 => mapping(address => uint256)) public contributions;\n\n    event CampaignCreated(uint256 indexed id, address indexed creator, uint256 goal, uint256 deadline);\n    event ContributionMade(uint256 indexed id, address indexed contributor, uint256 amount, uint256 tokensReceived);\n    event Withdrawn(uint256 indexed id, address indexed creator, uint256 amount);\n    event Refunded(uint256 indexed id, address indexed contributor, uint256 amount);\n\n    constructor(address tokenAddress) {\n        require(tokenAddress != address(0), \"Invalid token\");\n        campaignToken = ICampaignToken(tokenAddress);\n    }\n\n    function createCampaign(uint256 goal, uint256 durationSeconds) external {\n        require(goal > 0, \"Goal must be positive\");\n        require(durationSeconds > 0, \"Duration must be positive\");\n\n        uint256 id = ++campaignCount;\n        uint256 deadline = block.timestamp + durationSeconds;\n\n        campaigns[id] = Campaign({\n            creator: msg.sender,\n            goal: goal,\n            deadline: deadline,\n            amountRaised: 0,\n            withdrawn: false\n        });\n\n        emit CampaignCreated(id, msg.sender, goal, deadline);\n    }\n\n    function contribute(uint256 id) external payable {\n        Campaign storage c = campaigns[id];\n        require(c.creator != address(0), \"Campaign does not exist\");\n        require(msg.value > 0, \"Must send ETH\");\n        require(block.timestamp < c.deadline, \"Campaign has ended\");\n\n        c.amountRaised += msg.value;\n        contributions[id][msg.sender] += msg.value;\n\n        // 1 ETH => 1000 CFT. CFT has 18 decimals, so do not divide by 1 ether.\n        uint256 tokenAmount = msg.value * TOKENS_PER_ETH;\n        campaignToken.mint(msg.sender, tokenAmount);\n\n        emit ContributionMade(id, msg.sender, msg.value, tokenAmount);\n    }\n\n    function withdrawFunds(uint256 id) external {\n        Campaign storage c = campaigns[id];\n        require(msg.sender == c.creator, \"Only creator\");\n        require(block.timestamp >= c.deadline, \"Campaign active\");\n        require(c.amountRaised >= c.goal, \"Goal not reached\");\n        require(!c.withdrawn, \"Already withdrawn\");\n\n        c.withdrawn = true;\n        uint256 amount = c.amountRaised;\n        (bool ok,) = payable(c.creator).call{value: amount}(\"\");\n        require(ok, \"Transfer failed\");\n\n        emit Withdrawn(id, c.creator, amount);\n    }\n\n    function claimRefund(uint256 id) external {\n        Campaign storage c = campaigns[id];\n        require(block.timestamp >= c.deadline, \"Campaign active\");\n        require(c.amountRaised < c.goal, \"Goal reached\");\n\n        uint256 amount = contributions[id][msg.sender];\n        require(amount > 0, \"No contribution\");\n\n        contributions[id][msg.sender] = 0;\n        (bool ok,) = payable(msg.sender).call{value: amount}(\"\");\n        require(ok, \"Transfer failed\");\n\n        emit Refunded(id, msg.sender, amount);\n    }\n\n    function getCampaign(uint256 id)\n        external view\n        returns (address creator, uint256 goal, uint256 deadline, uint256 amountRaised, bool withdrawn)\n    {\n        Campaign memory c = campaigns[id];\n        return (c.creator, c.goal, c.deadline, c.amountRaised, c.withdrawn);\n    }\n\n    function getContribution(uint256 id, address contributor) external view returns (uint256) {\n        return contributions[id][contributor];\n    }\n}\n"
+      }
+    }
+  }
+}

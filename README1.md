@@ -1,11 +1,11 @@
-# DeFi Crowdfunding DApp --- Experiment 4
+# DeFi Crowdfunding DApp --- Experiment 6
 
 ## Overview
 
 This project is a decentralized crowdfunding DApp extended with DeFi
 functionality.
 
-Experiment 4 demonstrates:
+Experiment 6 demonstrates:
 
 1.  Creating crowdfunding campaigns in ETH
 2.  Contributing ETH to campaigns
@@ -15,6 +15,8 @@ Experiment 4 demonstrates:
 6.  Swapping ETH for CFT
 7.  Swapping CFT for ETH
 8.  Viewing AMM reserves and LP shares
+9.  Fee-adjusted swaps with on-chain minimum-output protection
+10. DEX quotes, slippage settings, balances, and pool price information
 
 The frontend uses **ethers.js v6**, MetaMask, and Ethereum Sepolia.
 
@@ -85,10 +87,10 @@ It uses a 0.3% swap fee.
 Main functions:
 
 ``` text
-addLiquidity()
-removeLiquidity()
-swapETHForToken()
-swapTokenForETH()
+addLiquidity(tokenAmount)
+removeLiquidity(shares)
+swapETHForToken(minAmountOut)
+swapTokenForETH(tokenAmount, minAmountOut)
 getAmountOut()
 getK()
 ```
@@ -101,7 +103,10 @@ getK()
   Crowdfunding    `0x5e2FAa0976A68658D31eE8811c24DDBF6d40ABD6`
   LiquidityPool   `0xB68FFE11249f8A4f7530181361890a0B6c9c7fB0`
 
-These addresses are for the current deployment.
+These addresses are from the earlier deployment and are retained for reference.
+Because Experiment 6 adds `minAmountOut` to the pool swap functions, deploy
+`IntegratedDeFi.ts` again and replace these values before using the current
+frontend.
 
 ## Frontend
 
@@ -726,3 +731,181 @@ at their original addresses.
 For this reason, the current deployment should be preserved unless a new
 deployment is intentionally required to correct the CFT decimal-scaling
 issue.
+
+------------------------------------------------------------------------
+
+## Experiment 6: Exact Deployment-to-DEX Demo
+
+This section is the authoritative runbook for the current
+`LiquidityPool.sol`. It uses `IntegratedDeFi.ts`, which deploys the corrected
+crowdfunding reward calculation, CampaignToken, LPToken, LiquidityPool, and
+the staking contracts. Because Experiment 6 adds `minAmountOut` to both swap
+functions, deploy a fresh `IntegratedDeFi` instance before testing. Do not use
+an older pool address with the new frontend ABI.
+
+### A. Ganache deployment
+
+Run the following commands from the repository root. The `blockchain`
+directory contains the Hardhat `package.json`.
+
+1. Start Ganache with:
+
+``` text
+RPC URL: http://127.0.0.1:7545
+Chain ID: 1337
+Default account balance: 100 ETH
+```
+
+2. Import Ganache Account 1 into MetaMask using Ganache's private key. This
+   key is for local testing only.
+3. Open a PowerShell terminal in `blockchain` and run:
+
+``` powershell
+cd blockchain
+$env:GANACHE_PRIVATE_KEY = "<private key for Ganache Account 1>"
+npm install
+npm run compile
+npm run deploy:ganache
+```
+
+4. Copy the Ignition addresses for `campaignToken`, `crowdfunding`, and
+   `liquidityPool` into `frontend/local-contracts.js`:
+
+``` javascript
+window.LOCAL_CONTRACTS = {
+    campaignToken: "<campaignToken address>",
+    crowdfunding: "<crowdfunding address>",
+    liquidityPool: "<liquidityPool address>"
+};
+```
+
+5. If Ganache is reset, all contract addresses change. Deploy again and
+   replace the three values.
+
+The Hardhat configuration uses the `paris` EVM target because some Ganache
+versions do not support bytecode generated for the newer `osaka` target. If
+multiple basic constructors revert during Ignition simulation, restart the
+Ganache workspace and run `npm run compile` before deploying again.
+
+### B. Sepolia deployment
+
+1. Put these values in `blockchain/.env`:
+
+``` text
+SEPOLIA_RPC_URL=<Sepolia RPC URL>
+SEPOLIA_PRIVATE_KEY=<Account 1 private key>
+```
+
+Never commit `.env` or use a Ganache private key on Sepolia.
+2. From `blockchain`, run:
+
+``` powershell
+cd blockchain
+npm install
+npm run compile
+npx hardhat ignition deploy ignition/modules/IntegratedDeFi.ts --network sepolia
+```
+
+3. Copy the new `campaignToken`, `crowdfunding`, and `liquidityPool` values
+   into the `CONTRACTS` object at the top of `frontend/app.js`. The old
+   Sepolia addresses in this file are from an earlier deployment and must not
+   be used with the new slippage-protected ABI unless that deployment already
+   contains the updated pool.
+
+### C. Start the frontend and connect MetaMask
+
+Serve `frontend/index.html` with VS Code Live Server. Do not use a `file://`
+URL. In MetaMask select:
+
+``` text
+Ganache: Ethereum RPC http://127.0.0.1:7545, Chain ID 1337
+or
+Sepolia: Chain ID 11155111
+```
+
+Click **Connect MetaMask**. Confirm that the displayed account and network
+match the account selected in MetaMask. The app rejects other networks.
+
+### D. Exact values for the DEX demonstration
+
+Use these roles:
+
+``` text
+Account 1: deployer
+Account 2: campaign creator
+Account 3: trader
+Account 4: liquidity provider
+```
+
+1. Switch to Account 2. In **Create Campaign**, enter:
+
+``` text
+Goal (ETH): 1
+Duration (seconds): 3600
+```
+
+   Click **Create Campaign**.
+2. Switch to Account 4. In **Contribute**, enter:
+
+``` text
+Campaign ID: 1
+Contribution (ETH): 0.1
+```
+
+   Click **Contribute ETH**. On a fresh corrected deployment this gives
+   Account 4 approximately `100 CFT`.
+3. Still using Account 4, in **Add Liquidity**, enter:
+
+``` text
+ETH Amount: 0.1
+CFT Amount: 100
+```
+
+   Approve CFT and confirm the liquidity transaction. This intentionally
+   seeds the pool at approximately `0.1 ETH / 100 CFT`; campaign funds are not
+   automatically connected to the AMM.
+4. Switch to Account 3. In **Experiment 6 DEX**, enter:
+
+``` text
+From: ETH
+Amount: 0.01
+Slippage tolerance (%): 0.5
+```
+
+   The initial quote is approximately `9.066 CFT`. Click **Swap** and confirm.
+5. Keep Account 3 selected. Change the DEX fields to:
+
+``` text
+From: CFT
+Amount: 1
+Slippage tolerance (%): 0.5
+```
+
+   Account 3 receives CFT from the ETH swap, so this second quote is
+   approximately `0.001197 ETH`. Click **Swap**, approve CFT first, and then
+   confirm the swap. The quote changes after every swap because reserves change.
+6. Refresh the AMM display and verify ETH reserve, CFT reserve, spot prices,
+   LP shares, and `k`.
+
+For a standalone CFT-to-ETH demonstration before the ETH-to-CFT swap, Account
+3 must first receive at least `1 CFT` from a contribution. The initial quote
+for `1 CFT` against a fresh `0.1 ETH / 100 CFT` pool is approximately
+`0.000987 ETH`.
+
+### E. Expected transaction sequence
+
+``` text
+Account 1 deploys
+Account 2 creates campaign
+Account 4 contributes 0.1 ETH and receives about 100 CFT
+Account 4 approves CFT
+Account 4 adds 0.1 ETH + 100 CFT liquidity
+Account 3 swaps 0.01 ETH -> about 9.066 CFT
+Account 3 approves 1 CFT
+Account 3 swaps 1 CFT -> about 0.001197 ETH
+```
+
+Every swap uses the fee-adjusted constant-product formula and passes a
+calculated `minAmountOut` to the contract. A changed quote below that minimum
+reverts. The frontend displays pending, success, and error states and refreshes
+balances and reserves after confirmation.

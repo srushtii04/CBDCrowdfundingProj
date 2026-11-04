@@ -3,9 +3,13 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import "@openzeppelin/contracts/utils/Nonces.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract CampaignToken is ERC20, ERC20Burnable, Ownable {
+contract CampaignToken is ERC20, ERC20Burnable, ERC20Permit, ERC20Votes, Ownable {
     address public minter;
 
     error NotMinter();
@@ -13,7 +17,11 @@ contract CampaignToken is ERC20, ERC20Burnable, Ownable {
 
     event MinterUpdated(address indexed oldMinter, address indexed newMinter);
 
-    constructor() ERC20("Campaign Token", "CFT") Ownable(msg.sender) {}
+    constructor()
+        ERC20("Campaign Token", "CFT")
+        ERC20Permit("Campaign Token")
+        Ownable(msg.sender)
+    {}
 
     modifier onlyMinter() {
         if (msg.sender != minter) revert NotMinter();
@@ -30,5 +38,21 @@ contract CampaignToken is ERC20, ERC20Burnable, Ownable {
     function mint(address to, uint256 amount) external onlyMinter {
         if (to == address(0)) revert ZeroAddress();
         _mint(to, amount);
+    }
+
+    function _update(address from, address to, uint256 value)
+        internal
+        override(ERC20, ERC20Votes)
+    {
+        super._update(from, to, value);
+    }
+
+    function nonces(address owner)
+        public
+        view
+        override(ERC20Permit, Nonces)
+        returns (uint256)
+    {
+        return super.nonces(owner);
     }
 }

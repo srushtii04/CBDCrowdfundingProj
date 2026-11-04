@@ -27,6 +27,7 @@ contract LiquidityPool is ReentrancyGuard {
     error InvalidAmount();
     error InsufficientLiquidity();
     error InsufficientOutput();
+    error SlippageExceeded();
     error InsufficientShares();
     error TransferFailed();
 
@@ -95,13 +96,19 @@ contract LiquidityPool is ReentrancyGuard {
         emit LiquidityRemoved(msg.sender, ethAmount, tokenAmount, shares);
     }
 
-    function swapETHForToken() external payable nonReentrant returns (uint256 amountOut) {
+    function swapETHForToken(uint256 minAmountOut)
+        external
+        payable
+        nonReentrant
+        returns (uint256 amountOut)
+    {
         uint256 amountIn = msg.value;
         if (amountIn == 0) revert InvalidAmount();
         if (reserveETH == 0 || reserveToken == 0) revert InsufficientLiquidity();
 
         amountOut = getAmountOut(amountIn, reserveETH, reserveToken);
         if (amountOut == 0 || amountOut >= reserveToken) revert InsufficientOutput();
+        if (amountOut < minAmountOut) revert SlippageExceeded();
 
         reserveETH += amountIn;
         reserveToken -= amountOut;
@@ -110,13 +117,18 @@ contract LiquidityPool is ReentrancyGuard {
         emit Swap(msg.sender, true, amountIn, amountOut);
     }
 
-    function swapTokenForETH(uint256 tokenAmount) external nonReentrant returns (uint256 amountOut) {
+    function swapTokenForETH(uint256 tokenAmount, uint256 minAmountOut)
+        external
+        nonReentrant
+        returns (uint256 amountOut)
+    {
         if (tokenAmount == 0) revert InvalidAmount();
         if (reserveETH == 0 || reserveToken == 0) revert InsufficientLiquidity();
 
         token.safeTransferFrom(msg.sender, address(this), tokenAmount);
         amountOut = getAmountOut(tokenAmount, reserveToken, reserveETH);
         if (amountOut == 0 || amountOut >= reserveETH) revert InsufficientOutput();
+        if (amountOut < minAmountOut) revert SlippageExceeded();
 
         reserveToken += tokenAmount;
         reserveETH -= amountOut;

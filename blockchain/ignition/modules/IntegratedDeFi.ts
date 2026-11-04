@@ -4,7 +4,7 @@ const IntegratedDeFiModule = buildModule("IntegratedDeFiModule", (m) => {
   // 1. Contribution reward token
   const campaignToken = m.contract("CampaignToken");
 
-  // 2. Crowdfunding with corrected 18-decimal CFT reward calculation
+  // 2. Crowdfunding with delayed, claimable CFT rewards
   const crowdfunding = m.contract("Crowdfunding", [campaignToken]);
 
   // 3. Transferable LP position token
@@ -28,6 +28,20 @@ const IntegratedDeFiModule = buildModule("IntegratedDeFiModule", (m) => {
     rewardRate
   ]);
 
+  const dexFactory = m.contract("DexFactory");
+  const dexRouter = m.contract("DexRouter", [dexFactory]);
+  const treasuryVault = m.contract("TreasuryVault", [campaignToken]);
+  const mockPriceFeed = m.contract("MockPriceFeed", [8, 200000000000n]);
+  const priceOracle = m.contract("ChainlinkPriceOracle", [mockPriceFeed, 86400]);
+  const governance = m.contract("DaoGovernance", [
+    campaignToken,
+    1,
+    3600,
+    1000,
+    86400
+  ]);
+  const flashLoanDemo = m.contract("FlashLoanDemo");
+
   // Configure the two restricted roles only after dependent contracts exist.
   m.call(campaignToken, "setMinter", [crowdfunding]);
   m.call(lpToken, "setPool", [liquidityPool]);
@@ -42,7 +56,14 @@ const IntegratedDeFiModule = buildModule("IntegratedDeFiModule", (m) => {
     lpToken,
     liquidityPool,
     rewardToken,
-    stakingFarm
+    stakingFarm,
+    dexFactory,
+    dexRouter,
+    treasuryVault,
+    mockPriceFeed,
+    priceOracle,
+    governance,
+    flashLoanDemo
   };
 });
 

@@ -5,7 +5,9 @@ interface ICampaignToken {
     function mint(address to, uint256 amount) external;
 }
 
-contract Crowdfunding {
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+contract Crowdfunding is ReentrancyGuard {
     struct Campaign {
         address creator;
         uint256 goal;
@@ -20,9 +22,11 @@ contract Crowdfunding {
 
     mapping(uint256 => Campaign) public campaigns;
     mapping(uint256 => mapping(address => uint256)) public contributions;
+    mapping(uint256 => mapping(address => bool)) public tokensClaimed;
 
     event CampaignCreated(uint256 indexed id, address indexed creator, uint256 goal, uint256 deadline);
     event ContributionMade(uint256 indexed id, address indexed contributor, uint256 amount, uint256 tokensReceived);
+    event TokensClaimed(uint256 indexed id, address indexed contributor, uint256 tokensReceived);
     event Withdrawn(uint256 indexed id, address indexed creator, uint256 amount);
     event Refunded(uint256 indexed id, address indexed contributor, uint256 amount);
 
@@ -49,7 +53,7 @@ contract Crowdfunding {
         emit CampaignCreated(id, msg.sender, goal, deadline);
     }
 
-    function contribute(uint256 id) external payable {
+    function contribute(uint256 id) external payable nonReentrant {
         Campaign storage c = campaigns[id];
         require(c.creator != address(0), "Campaign does not exist");
         require(msg.value > 0, "Must send ETH");
@@ -58,14 +62,26 @@ contract Crowdfunding {
         c.amountRaised += msg.value;
         contributions[id][msg.sender] += msg.value;
 
-        // 1 ETH => 1000 CFT. CFT has 18 decimals, so do not divide by 1 ether.
-        uint256 tokenAmount = msg.value * TOKENS_PER_ETH;
-        campaignToken.mint(msg.sender, tokenAmount);
-
-        emit ContributionMade(id, msg.sender, msg.value, tokenAmount);
+        emit ContributionMade(id, msg.sender, msg.value, 0);
     }
 
-    function withdrawFunds(uint256 id) external {
+    function claimTokens(uint256 id) external nonReentrant {
+        Campaign storage c = campaigns[id];
+        require(c.creator != address(0), "Campaign does not exist");
+        require(block.timestamp >= c.deadline, "Campaign active");
+        require(c.amountRaised >= c.goal, "Goal not reached");
+        require(!tokensClaimed[id][msg.sender], "Tokens already claimed");
+
+        uint256 contribution = contributions[id][msg.sender];
+        require(contribution > 0, "No contribution");
+        tokensClaimed[id][msg.sender] = true;
+
+        uint256 tokenAmount = contribution * TOKENS_PER_ETH;
+        campaignToken.mint(msg.sender, tokenAmount);
+        emit TokensClaimed(id, msg.sender, tokenAmount);
+    }
+
+    function withdrawFunds(uint256 id) external nonReentrant {
         Campaign storage c = campaigns[id];
         require(msg.sender == c.creator, "Only creator");
         require(block.timestamp >= c.deadline, "Campaign active");
@@ -80,7 +96,7 @@ contract Crowdfunding {
         emit Withdrawn(id, c.creator, amount);
     }
 
-    function claimRefund(uint256 id) external {
+    function claimRefund(uint256 id) external nonReentrant {
         Campaign storage c = campaigns[id];
         require(block.timestamp >= c.deadline, "Campaign active");
         require(c.amountRaised < c.goal, "Goal reached");

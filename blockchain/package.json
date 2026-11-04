@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx hardhat test test/Dex.test.ts",
+    "compile": "npx hardhat compile",
+    "deploy:ganache": "npx hardhat ignition deploy ignition/modules/IntegratedDeFi.ts --network ganache"
   },
   "keywords": [],
   "author": "",
