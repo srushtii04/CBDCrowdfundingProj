@@ -1,0 +1,50 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_34-557df4a927c46ddd6abcd500c2c335769c08cbba",
+  "solcVersion": "0.8.34",
+  "solcLongVersion": "0.8.34+commit.80d5c536",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.17.0"
+  },
+  "userSourceNameMap": {
+    "contracts/ChainlinkPriceOracle.sol": "project/contracts/ChainlinkPriceOracle.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": [],
+      "viaIR": true
+    },
+    "sources": {
+      "project/contracts/ChainlinkPriceOracle.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.24;\r\n\r\ninterface AggregatorV3Interface {\r\n    function decimals() external view returns (uint8);\r\n    function latestRoundData()\r\n        external\r\n        view\r\n        returns (uint80, int256, uint256, uint256, uint80);\r\n}\r\n\r\n/// @notice Validates and normalizes a Chainlink price feed.\r\ncontract ChainlinkPriceOracle {\r\n    AggregatorV3Interface public immutable feed;\r\n    uint256 public immutable maxAge;\r\n\r\n    error InvalidFeed();\r\n    error StalePrice();\r\n    error InvalidPrice();\r\n\r\n    constructor(address feed_, uint256 maxAge_) {\r\n        if (feed_ == address(0) || maxAge_ == 0) revert InvalidFeed();\r\n        feed = AggregatorV3Interface(feed_);\r\n        maxAge = maxAge_;\r\n    }\r\n\r\n    function latestPrice() external view returns (uint256 price, uint8 feedDecimals) {\r\n        (, int256 answer,, uint256 updatedAt,) = feed.latestRoundData();\r\n        if (answer <= 0 || updatedAt == 0 || updatedAt > block.timestamp) {\r\n            revert InvalidPrice();\r\n        }\r\n        if (block.timestamp - updatedAt > maxAge) revert StalePrice();\r\n        return (uint256(answer), feed.decimals());\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}

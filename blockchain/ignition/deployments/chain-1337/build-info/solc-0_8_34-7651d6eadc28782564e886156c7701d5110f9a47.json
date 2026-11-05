@@ -1,0 +1,55 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_34-7651d6eadc28782564e886156c7701d5110f9a47",
+  "solcVersion": "0.8.34",
+  "solcLongVersion": "0.8.34+commit.80d5c536",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.17.0"
+  },
+  "userSourceNameMap": {
+    "contracts/DaoGovernance.sol": "project/contracts/DaoGovernance.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": [
+        "project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.6.1/"
+      ],
+      "viaIR": true
+    },
+    "sources": {
+      "npm/@openzeppelin/contracts@5.6.1/governance/utils/IVotes.sol": {
+        "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.5.0) (governance/utils/IVotes.sol)\n\npragma solidity >=0.8.4;\n\n/**\n * @dev Common interface for {ERC20Votes}, {ERC721Votes}, and other {Votes}-enabled contracts.\n */\ninterface IVotes {\n    /**\n     * @dev The signature used has expired.\n     */\n    error VotesExpiredSignature(uint256 expiry);\n\n    /**\n     * @dev Emitted when an account changes their delegate.\n     */\n    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);\n\n    /**\n     * @dev Emitted when a token transfer or delegate change results in changes to a delegate's number of voting units.\n     */\n    event DelegateVotesChanged(address indexed delegate, uint256 previousVotes, uint256 newVotes);\n\n    /**\n     * @dev Returns the current amount of votes that `account` has.\n     */\n    function getVotes(address account) external view returns (uint256);\n\n    /**\n     * @dev Returns the amount of votes that `account` had at a specific moment in the past. If the `clock()` is\n     * configured to use block numbers, this will return the value at the end of the corresponding block.\n     */\n    function getPastVotes(address account, uint256 timepoint) external view returns (uint256);\n\n    /**\n     * @dev Returns the total supply of votes available at a specific moment in the past. If the `clock()` is\n     * configured to use block numbers, this will return the value at the end of the corresponding block.\n     *\n     * NOTE: This value is the sum of all available votes, which is not necessarily the sum of all delegated votes.\n     * Votes that have not been delegated are still part of total supply, even though they would not participate in a\n     * vote.\n     */\n    function getPastTotalSupply(uint256 timepoint) external view returns (uint256);\n\n    /**\n     * @dev Returns the delegate that `account` has chosen.\n     */\n    function delegates(address account) external view returns (address);\n\n    /**\n     * @dev Delegates votes from the sender to `delegatee`.\n     */\n    function delegate(address delegatee) external;\n\n    /**\n     * @dev Delegates votes from signer to `delegatee`.\n     */\n    function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) external;\n}\n"
+      },
+      "project/contracts/DaoGovernance.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.24;\r\n\r\nimport \"@openzeppelin/contracts/governance/utils/IVotes.sol\";\r\n\r\n/// @notice Small timelocked governance controller for demonstration deployments.\r\ncontract DaoGovernance {\r\n    struct Proposal {\r\n        address proposer;\r\n        address target;\r\n        uint256 value;\r\n        bytes data;\r\n        uint256 snapshot;\r\n        uint256 start;\r\n        uint256 end;\r\n        uint256 eta;\r\n        uint256 forVotes;\r\n        uint256 againstVotes;\r\n        uint256 quorum;\r\n        bool queued;\r\n        bool executed;\r\n    }\r\n\r\n    IVotes public immutable votingToken;\r\n    uint256 public immutable votingDelay;\r\n    uint256 public immutable votingPeriod;\r\n    uint256 public immutable quorumBps;\r\n    uint256 public immutable timelockDelay;\r\n    uint256 public proposalCount;\r\n    mapping(uint256 => Proposal) public proposals;\r\n    mapping(uint256 => mapping(address => bool)) public hasVoted;\r\n\r\n    event ProposalCreated(uint256 indexed id, address indexed proposer, string description);\r\n    event VoteCast(uint256 indexed id, address indexed voter, bool support, uint256 weight);\r\n    event ProposalQueued(uint256 indexed id, uint256 eta);\r\n    event ProposalExecuted(uint256 indexed id);\r\n\r\n    error InvalidProposal();\r\n    error VotingClosed();\r\n    error AlreadyVoted();\r\n    error NotReady();\r\n    error ExecutionFailed();\r\n\r\n    constructor(\r\n        IVotes token_,\r\n        uint256 delay_,\r\n        uint256 period_,\r\n        uint256 quorumBps_,\r\n        uint256 timelockDelay_\r\n    ) {\r\n        require(address(token_) != address(0) && period_ > 0 && quorumBps_ <= 10_000, \"Invalid config\");\r\n        votingToken = token_;\r\n        votingDelay = delay_;\r\n        votingPeriod = period_;\r\n        quorumBps = quorumBps_;\r\n        timelockDelay = timelockDelay_;\r\n    }\r\n\r\n    function propose(address target, uint256 value, bytes calldata data, string calldata description)\r\n        external\r\n        returns (uint256 id)\r\n    {\r\n        if (target == address(0)) revert InvalidProposal();\r\n        // Use the last completed block so the checkpoint lookup is valid in\r\n        // the proposal transaction itself; voting starts after the delay.\r\n        uint256 snapshot = block.number - 1;\r\n        id = ++proposalCount;\r\n        uint256 supply = votingToken.getPastTotalSupply(snapshot);\r\n        proposals[id] = Proposal(msg.sender, target, value, data, snapshot, block.number + votingDelay, block.number + votingDelay + votingPeriod, 0, 0, 0, supply * quorumBps / 10_000, false, false);\r\n        emit ProposalCreated(id, msg.sender, description);\r\n    }\r\n\r\n    function vote(uint256 id, bool support) external {\r\n        Proposal storage p = proposals[id];\r\n        if (block.number < p.start || block.number > p.end) revert VotingClosed();\r\n        if (hasVoted[id][msg.sender]) revert AlreadyVoted();\r\n        uint256 weight = votingToken.getPastVotes(msg.sender, p.snapshot);\r\n        if (weight == 0) revert InvalidProposal();\r\n        hasVoted[id][msg.sender] = true;\r\n        if (support) p.forVotes += weight;\r\n        else p.againstVotes += weight;\r\n        emit VoteCast(id, msg.sender, support, weight);\r\n    }\r\n\r\n    function queue(uint256 id) external {\r\n        Proposal storage p = proposals[id];\r\n        if (block.number <= p.end || p.forVotes <= p.againstVotes || p.forVotes + p.againstVotes < p.quorum) {\r\n            revert InvalidProposal();\r\n        }\r\n        p.queued = true;\r\n        p.eta = block.timestamp + timelockDelay;\r\n        emit ProposalQueued(id, p.eta);\r\n    }\r\n\r\n    function execute(uint256 id) external payable {\r\n        Proposal storage p = proposals[id];\r\n        if (!p.queued || p.executed || block.timestamp < p.eta) revert NotReady();\r\n        p.executed = true;\r\n        (bool ok,) = p.target.call{value: p.value}(p.data);\r\n        if (!ok) revert ExecutionFailed();\r\n        emit ProposalExecuted(id);\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}

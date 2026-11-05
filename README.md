@@ -1,5 +1,91 @@
 # Integrated DeFi Crowdfunding and DeFi Platform
 
+## Deploy locally with Ganache
+
+This project is configured for **Ganache**, not a production blockchain. The
+contracts and ETH used by this setup are local development data with no
+real-world value. Use Ganache Desktop or Ganache CLI on the endpoint below.
+
+### Prerequisites
+
+- Node.js and npm
+- Ganache
+- MetaMask
+
+### 1. Start Ganache
+
+Create or open a Ganache workspace with:
+
+- Host: `127.0.0.1`
+- RPC port: `7545`
+- Network/chain ID: `1337`
+- Default account balance: `100` ETH
+
+Keep Ganache running while compiling, deploying, and using the frontend.
+Ganache accounts are local test accounts only. Never reuse their private keys
+on Sepolia or any public network.
+
+### 2. Install and deploy the contracts
+
+Open PowerShell in the blockchain project:
+
+```powershell
+cd E:\CBDPRO\CBDCrowdfundingProj\blockchain
+npm install
+$env:GANACHE_RPC_URL = "http://127.0.0.1:7545"
+$env:GANACHE_PRIVATE_KEY = "<private key of a Ganache account>"
+npm run compile
+npm run deploy:ganache
+```
+
+`GANACHE_PRIVATE_KEY` must belong to an account in the currently running
+Ganache workspace and must include the `0x` prefix. The deployment uses
+Hardhat Ignition and prints addresses for the integrated contracts.
+
+If Hardhat reports a stale compilation result or the previous `Stack too deep`
+error, force a fresh compile without resetting Ganache:
+
+```powershell
+npx hardhat compile --force
+npm run deploy:ganache
+```
+
+The compiler profiles enable Solidity IR compilation and optimization, which
+is required by the current `DexRouter` contract.
+
+### 3. Configure the frontend
+
+Copy every address printed by Ignition into
+[frontend/local-contracts.js](./frontend/local-contracts.js). The dashboard
+uses the keys `campaignToken`, `crowdfunding`, `lpToken`, `liquidityPool`,
+`rewardToken`, `stakingFarm`, `dexFactory`, `dexRouter`, `treasuryVault`,
+`priceOracle`, `mockPriceFeed`, `governance`, and `flashLoanDemo`.
+These addresses are local-only and become invalid when Ganache is reset.
+Redeploy after a reset and replace the values.
+
+The dashboard separates crowdfunding, ETH/CFT liquidity, staking, governance,
+treasury, DEX, and admin/oracle workflows into tabs. The Contract Console
+provides a typed function-signature fallback for deployed functions that do
+not have a guided form.
+
+### 4. Run the frontend
+
+Serve [frontend](./frontend) through a local HTTP server; do not open
+`index.html` with `file://`. For example, from the repository root:
+
+```powershell
+npx serve frontend
+```
+
+In MetaMask, import the same Ganache account used for deployment and select:
+
+- Network name: `Ganache Local`
+- RPC URL: `http://127.0.0.1:7545`
+- Chain ID: `1337`
+- Currency symbol: `ETH`
+
+Open the URL printed by the server and click **Connect MetaMask**.
+
 The repository contains a local Ganache crowdfunding and DeFi demonstration.
 The current implementation includes crowdfunding, controlled CFT rewards,
 ERC-4626 treasury shares, a fee-adjusted AMM/DEX, LP staking, validated
@@ -47,8 +133,9 @@ instruction. If Ignition reports that several simple constructors revert
 during simulation, stop any stale Ganache process, restart the Ganache
 workspace, and rerun the compile and deployment commands above.
 
-Save all six new addresses from Ignition:
-`campaignToken`, `crowdfunding`, `lpToken`, `liquidityPool`, `rewardToken`, `stakingFarm`.
+Save the addresses printed by Ignition if you will interact with the
+additional DeFi contracts. The frontend crowdfunding UI only requires
+`campaignToken`, `crowdfunding`, and `liquidityPool`.
 
 Do not overwrite the old address notes. The old deployment remains available on Sepolia.
 
@@ -79,10 +166,23 @@ real-world value.
    npm run deploy:ganache
    ```
 
-   The deployment prints addresses for `campaignToken`, `crowdfunding`, and
-   `liquidityPool`. Copy those three addresses into
+   The deployment prints addresses for every contract in the integrated
+   module. Copy all of them into the matching keys in
    `frontend/local-contracts.js`. If the Ganache workspace is reset, deploy
    again and replace the addresses.
+
+   If deployment fails with `insufficient funds for gas * price + value`,
+   the private key in `blockchain/.env` belongs to a different Ganache
+   workspace. Import the private key of a currently funded Ganache account
+   into `GANACHE_PRIVATE_KEY` (keep the `0x` prefix), then clear the stale
+   local Ignition record and deploy again:
+
+   ```powershell
+   Remove-Item -Recurse -Force .\ignition\deployments\chain-1337
+   npm run deploy:ganache
+   ```
+
+   Do not paste private keys into source files, commits, or chat messages.
 5. Serve the `frontend` directory with any local static HTTP server and open
    it in the browser. Click **Connect MetaMask** while the Ganache network is
    selected. The frontend accepts both Ganache (`1337`) and Sepolia
@@ -114,8 +214,9 @@ npm run compile
 npx hardhat ignition deploy ignition/modules/IntegratedDeFi.ts --network sepolia
 ```
 
-Save all six addresses printed by Ignition. The frontend needs
-`campaignToken`, `crowdfunding`, and `liquidityPool`.
+Save the addresses printed by Ignition. The frontend needs
+`campaignToken`, `crowdfunding`, and `liquidityPool`; the other deployed
+addresses are required only when using those additional contracts directly.
 
 ### 2. Configure frontend addresses
 

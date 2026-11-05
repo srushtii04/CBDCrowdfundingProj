@@ -22,6 +22,7 @@ export default defineConfig({
         version: "0.8.34",
         settings: {
           evmVersion: "cancun",
+          viaIR: true,
           optimizer: {
             enabled: true,
             runs: 200,
@@ -35,7 +36,19 @@ export default defineConfig({
       type: "edr-simulated",
       chainType: "l1",
     },
-    hardhatOp: {
+  localhost: {
+    type: "http",
+    chainType: "l1",
+    chainId: 1337,
+    url: "http://127.0.0.1:8545",
+  },
+  hardhatLocal: {
+    type: "edr-simulated",
+    chainType: "l1",
+    chainId: 1337,
+    hardfork: "cancun",
+  },
+      hardhatOp: {
       type: "edr-simulated",
       chainType: "op",
     },

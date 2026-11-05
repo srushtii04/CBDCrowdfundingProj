@@ -1,0 +1,170 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "MockPriceFeed",
+  "sourceName": "contracts/MockPriceFeed.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "decimals_",
+          "type": "uint8"
+        },
+        {
+          "internalType": "int256",
+          "name": "initialAnswer",
+          "type": "int256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "latestRoundData",
+      "outputs": [
+        {
+          "internalType": "uint80",
+          "name": "",
+          "type": "uint80"
+        },
+        {
+          "internalType": "int256",
+          "name": "",
+          "type": "int256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint80",
+          "name": "",
+          "type": "uint80"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int256",
+          "name": "nextAnswer",
+          "type": "int256"
+        }
+      ],
+      "name": "setAnswer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60a03461010d57601f6103c138819003918201601f19168301916001600160401b0383118484101761011157808492604094855283398101031261010d5780519060ff8216820361010d57602001519033156100fa575f8054336001600160a01b0319821681178355604051939290916001600160a01b0316907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09080a36080525f8213156100c857506001554260025560405161029b908161012682396080518161021b0152f35b62461bcd60e51b815260206004820152600d60248201526c496e76616c696420707269636560981b6044820152606490fd5b631e4fbdf760e01b5f525f60045260245ffd5b5f80fd5b634e487b7160e01b5f52604160045260245ffdfe6080806040526004361015610012575f80fd5b5f3560e01c908163313ce5671461020457508063715018a6146101ad5780638da5cb5b1461018657806399213cd814610124578063f2fde38b1461009b5763feaf968c1461005e575f80fd5b34610097575f3660031901126100975760a060015460025460405191600183526020830152806040830152606082015260016080820152f35b5f80fd5b34610097576020366003190112610097576004356001600160a01b03811690819003610097576100c961023f565b8015610111575f80546001600160a01b03198116831782556001600160a01b0316907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09080a3005b631e4fbdf760e01b5f525f60045260245ffd5b346100975760203660031901126100975760043561014061023f565b5f8113156101515760015542600255005b60405162461bcd60e51b815260206004820152600d60248201526c496e76616c696420707269636560981b6044820152606490fd5b34610097575f366003190112610097575f546040516001600160a01b039091168152602090f35b34610097575f366003190112610097576101c561023f565b5f80546001600160a01b0319811682556001600160a01b03167f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e08280a3005b34610097575f3660031901126100975760209060ff7f0000000000000000000000000000000000000000000000000000000000000000168152f35b5f546001600160a01b0316330361025257565b63118cdaa760e01b5f523360045260245ffdfea26469706673582212207aff91db90df374de0a97bb3ec80b6b0b766ed8b44f15cb1cc0961b92a72891a64736f6c63430008220033",
+  "deployedBytecode": "0x6080806040526004361015610012575f80fd5b5f3560e01c908163313ce5671461020457508063715018a6146101ad5780638da5cb5b1461018657806399213cd814610124578063f2fde38b1461009b5763feaf968c1461005e575f80fd5b34610097575f3660031901126100975760a060015460025460405191600183526020830152806040830152606082015260016080820152f35b5f80fd5b34610097576020366003190112610097576004356001600160a01b03811690819003610097576100c961023f565b8015610111575f80546001600160a01b03198116831782556001600160a01b0316907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09080a3005b631e4fbdf760e01b5f525f60045260245ffd5b346100975760203660031901126100975760043561014061023f565b5f8113156101515760015542600255005b60405162461bcd60e51b815260206004820152600d60248201526c496e76616c696420707269636560981b6044820152606490fd5b34610097575f366003190112610097575f546040516001600160a01b039091168152602090f35b34610097575f366003190112610097576101c561023f565b5f80546001600160a01b0319811682556001600160a01b03167f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e08280a3005b34610097575f3660031901126100975760209060ff7f0000000000000000000000000000000000000000000000000000000000000000168152f35b5f546001600160a01b0316330361025257565b63118cdaa760e01b5f523360045260245ffdfea26469706673582212207aff91db90df374de0a97bb3ec80b6b0b766ed8b44f15cb1cc0961b92a72891a64736f6c63430008220033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {
+    "185": [
+      {
+        "length": 32,
+        "start": 539
+      }
+    ]
+  },
+  "inputSourceName": "project/contracts/MockPriceFeed.sol",
+  "buildInfoId": "solc-0_8_34-229a4804d3db3f8c83381b8201336e4257b5c608"
+}

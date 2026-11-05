@@ -1,541 +1,120 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>DeFi Crowdfunding DApp</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f7fb;
-            color: #172033;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 0 20px 50px;
-        }
-
-        header {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }
-
-        h1 {
-            margin: 0 0 10px;
-        }
-
-        h2 {
-            margin-top: 0;
-        }
-
-        .subtitle {
-            color: #667085;
-            margin-bottom: 20px;
-        }
-
-        .wallet {
-            background: #eef4ff;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            word-break: break-all;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 22px;
-            border-radius: 16px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.07);
-        }
-
-        .full {
-            grid-column: 1 / -1;
-        }
-
-        label {
-            display: block;
-            margin-top: 12px;
-            margin-bottom: 6px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            padding: 11px;
-            border: 1px solid #ccd3dd;
-            border-radius: 8px;
-            font-size: 15px;
-        }
-
-        button {
-            width: 100%;
-            margin-top: 15px;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #1d4ed8;
-        }
-
-        .secondary {
-            background: #475467;
-        }
-
-        .secondary:hover {
-            background: #344054;
-        }
-
-        .danger {
-            background: #dc2626;
-        }
-
-        .danger:hover {
-            background: #b91c1c;
-        }
-
-        .info {
-            background: #f8fafc;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 12px;
-        }
-
-        .info div {
-            margin: 8px 0;
-        }
-
-        .status {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            background: #eef2ff;
-            color: #1e293b;
-            word-break: break-word;
-        }
-
-        .success {
-            background: #ecfdf3;
-            color: #027a48;
-        }
-
-        .error {
-            background: #fef3f2;
-            color: #b42318;
-        }
-
-        .address {
-            font-family: monospace;
-            font-size: 13px;
-        }
-
-        @media (max-width: 800px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .full {
-                grid-column: auto;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CBD DeFi Operations Console</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+    .container{max-width:1280px;margin:28px auto;padding:0 20px 60px}header,.card{background:#fff;border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,.07)}
+    header{padding:24px;margin-bottom:18px}h1{margin:0 0 8px}h2{margin:0 0 14px;font-size:20px}h3{margin:18px 0 8px;font-size:16px}
+    .subtitle{color:#667085;margin:0 0 18px}.wallet{background:#eef4ff;padding:14px;border-radius:10px;word-break:break-all}
+    .wallet-grid,.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.wallet-grid{margin-top:14px}
+    .card{padding:20px}.full{grid-column:1/-1}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+    .tab{width:auto;margin:0;background:#475467}.tab.active{background:#2563eb}.panel{display:none}.panel.active{display:block}
+    label{display:block;margin:11px 0 6px;font-weight:bold;font-size:14px}input,select,textarea{width:100%;padding:10px;border:1px solid #ccd3dd;border-radius:8px;font:inherit;background:#fff}
+    textarea{min-height:78px;resize:vertical;font-family:monospace;font-size:13px}button{width:100%;margin-top:12px;padding:11px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer}
+    button:hover{background:#1d4ed8}button.secondary{background:#475467}button.danger{background:#dc2626}.muted{color:#667085;font-size:13px}
+    .info{background:#f8fafc;padding:13px;border-radius:10px;margin-top:12px}.info div{margin:7px 0}.address{font:12px monospace;word-break:break-all}
+    .status{margin-top:18px;padding:14px;border-radius:10px;background:#eef2ff;word-break:break-word}.success{background:#ecfdf3;color:#027a48}.error{background:#fef3f2;color:#b42318}
+    .metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.metric{background:#f8fafc;padding:12px;border-radius:10px}.metric strong{display:block;font-size:18px;margin-top:5px}
+    .contract-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e4e7ec;padding:9px 0}.contract-row:last-child{border:0}
+    @media(max-width:850px){.grid,.wallet-grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}.full{grid-column:auto}}
+  </style>
 </head>
-
 <body>
+<main class="container">
+  <header>
+    <h1>CBD DeFi Operations Console</h1>
+    <p class="subtitle">Crowdfunding, liquidity, staking, governance, treasury, oracle and DEX operations.</p>
+    <button id="connectButton" onclick="connectWallet()">Connect MetaMask</button>
+    <div class="wallet-grid">
+      <div class="wallet"><strong>Wallet</strong><div id="walletAddress">Not connected</div></div>
+      <div class="wallet"><strong>Network</strong><div id="networkName">Not connected</div></div>
+    </div>
+  </header>
 
-<div class="container">
+  <nav class="tabs" aria-label="Application sections">
+    <button class="tab active" data-panel="overview">Overview</button>
+    <button class="tab" data-panel="crowdfunding">Crowdfunding</button>
+    <button class="tab" data-panel="liquidity">Liquidity</button>
+    <button class="tab" data-panel="staking">Staking</button>
+    <button class="tab" data-panel="governance">Governance</button>
+    <button class="tab" data-panel="treasury">Treasury</button>
+    <button class="tab" data-panel="dex">DEX</button>
+    <button class="tab" data-panel="admin">Admin &amp; Oracle</button>
+    <button class="tab" data-panel="console">Contract Console</button>
+  </nav>
 
-    <header>
-        <h1>DeFi Crowdfunding DApp</h1>
+  <section id="overview" class="panel active">
+    <div class="card">
+      <h2>Connected deployment</h2>
+      <div id="contractList" class="info"></div>
+      <div class="metric-grid">
+        <div class="metric">ETH balance<strong id="ethBalance">-</strong></div>
+        <div class="metric">CFT balance<strong id="cftBalance">-</strong></div>
+        <div class="metric">RWD balance<strong id="rwdBalance">-</strong></div>
+        <div class="metric">LP balance<strong id="lpBalance">-</strong></div>
+      </div>
+      <button class="secondary" onclick="refreshAll()">Refresh deployment data</button>
+    </div>
+  </section>
 
-        <p class="subtitle">
-            Decentralized crowdfunding with CFT rewards and an ETH/CFT AMM liquidity pool.
-        </p>
-
-        <button onclick="connectWallet()">
-            Connect MetaMask
-        </button>
-
-        <div class="wallet">
-            <strong>Wallet:</strong>
-            <div id="walletAddress">Not connected</div>
-
-            <br>
-
-            <strong>Network:</strong>
-            <div id="networkName">Not connected</div>
-        </div>
-    </header>
-
-
+  <section id="crowdfunding" class="panel">
     <div class="grid">
-
-        <!-- CAMPAIGN -->
-        <section class="card">
-
-            <h2>Create Campaign</h2>
-
-            <label for="goal">
-                Goal (ETH)
-            </label>
-
-            <input
-                id="goal"
-                type="number"
-                step="0.0001"
-                placeholder="Example: 0.1"
-            >
-
-            <label for="duration">
-                Duration (seconds)
-            </label>
-
-            <input
-                id="duration"
-                type="number"
-                placeholder="Example: 3600"
-            >
-
-            <button onclick="createCampaign()">
-                Create Campaign
-            </button>
-
-        </section>
-
-
-        <!-- CONTRIBUTE -->
-        <section class="card">
-
-            <h2>Contribute</h2>
-
-            <p>
-                Contributors can claim CFT after a campaign reaches its goal.
-            </p>
-
-            <label for="campaignId">
-                Campaign ID
-            </label>
-
-            <input
-                id="campaignId"
-                type="number"
-                placeholder="Example: 1"
-            >
-
-            <label for="contributionAmount">
-                Contribution (ETH)
-            </label>
-
-            <input
-                id="contributionAmount"
-                type="number"
-                step="0.0001"
-                placeholder="Example: 0.01"
-            >
-
-            <button onclick="contribute()">
-                Contribute ETH
-            </button>
-
-        </section>
-
-        <section class="card">
-            <h2>Claim CFT Reward</h2>
-            <label for="claimCampaignId">Campaign ID</label>
-            <input id="claimCampaignId" type="number" placeholder="Example: 1">
-            <button onclick="claimCampaignTokens()">Claim CFT</button>
-        </section>
-
-
-        <!-- CFT BALANCE -->
-        <section class="card">
-
-            <h2>CFT Token</h2>
-
-            <div class="info">
-
-                <div>
-                    <strong>Token:</strong>
-                    Campaign Token (CFT)
-                </div>
-
-                <div>
-                    <strong>Your CFT Balance:</strong>
-                    <span id="cftBalance">-</span>
-                </div>
-
-            </div>
-
-            <button onclick="refreshBalances()">
-                Refresh Balance
-            </button>
-
-        </section>
-
-
-        <!-- CAMPAIGN INFO -->
-        <section class="card">
-
-            <h2>Campaign Information</h2>
-
-            <label for="viewCampaignId">
-                Campaign ID
-            </label>
-
-            <input
-                id="viewCampaignId"
-                type="number"
-                placeholder="Example: 1"
-            >
-
-            <button onclick="getCampaignInfo()">
-                View Campaign
-            </button>
-
-            <div class="info">
-
-                <div>
-                    <strong>Creator:</strong>
-                    <span id="campaignCreator">-</span>
-                </div>
-
-                <div>
-                    <strong>Goal:</strong>
-                    <span id="campaignGoal">-</span>
-                </div>
-
-                <div>
-                    <strong>Raised:</strong>
-                    <span id="campaignRaised">-</span>
-                </div>
-
-                <div>
-                    <strong>Deadline:</strong>
-                    <span id="campaignDeadline">-</span>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ADD LIQUIDITY -->
-        <section class="card">
-
-            <h2>Add Liquidity</h2>
-
-            <p>
-                Deposit ETH and CFT into the AMM.
-            </p>
-
-            <label for="liquidityEth">
-                ETH Amount
-            </label>
-
-            <input
-                id="liquidityEth"
-                type="number"
-                step="0.0001"
-                placeholder="Example: 0.01"
-            >
-
-            <label for="liquidityToken">
-                CFT Amount
-            </label>
-
-            <input
-                id="liquidityToken"
-                type="number"
-                step="0.01"
-                placeholder="Example: 10"
-            >
-
-            <button onclick="addLiquidity()">
-                Add Liquidity
-            </button>
-
-        </section>
-
-
-        <!-- REMOVE LIQUIDITY -->
-        <section class="card">
-
-            <h2>Remove Liquidity</h2>
-
-            <p>
-                Burn your LP shares and receive the proportional ETH/CFT reserves.
-            </p>
-
-            <label for="lpShares">
-                LP Shares
-            </label>
-
-            <input
-                id="lpShares"
-                type="number"
-                step="0.000000000000000001"
-                placeholder="Example: 0.01"
-            >
-
-            <button
-                class="danger"
-                onclick="removeLiquidity()"
-            >
-                Remove Liquidity
-            </button>
-
-        </section>
-
-
-        <!-- DEX SWAP -->
-        <section class="card full">
-
-            <h2>Experiment 6 DEX</h2>
-
-            <p>
-                Swap against the intentional ETH/CFT liquidity pool. Slippage is
-                enforced by the AMM transaction, not only by this interface.
-            </p>
-
-            <div class="grid">
-                <div>
-                    <label for="swapFrom">From</label>
-                    <select id="swapFrom" onchange="updateSwapToToken()">
-                        <option value="ETH">ETH</option>
-                        <option value="CFT">CFT</option>
-                    </select>
-                </div>
-                <div>
-                    <label>To</label>
-                    <div class="info" id="swapTo">CFT</div>
-                </div>
-            </div>
-
-            <label for="swapAmount">Amount</label>
-            <input
-                id="swapAmount"
-                type="number"
-                min="0"
-                step="0.000000000000000001"
-                placeholder="Example: 0.01 ETH"
-                oninput="updateSwapEstimate()"
-            >
-
-            <label for="swapSlippage">Slippage tolerance (%)</label>
-            <input
-                id="swapSlippage"
-                type="number"
-                min="0"
-                max="99.99"
-                step="0.01"
-                value="0.5"
-                oninput="updateSwapEstimate()"
-            >
-
-            <div class="info">
-                <div><strong>Estimated output:</strong> <span id="swapEstimate">-</span></div>
-                <div><strong>ETH balance:</strong> <span id="ethBalance">-</span></div>
-                <div><strong>CFT balance:</strong> <span id="dexCftBalance">-</span></div>
-            </div>
-
-            <button onclick="swapDex()">Swap</button>
-
-        </section>
-
-
-        <!-- AMM -->
-        <section class="card full">
-
-            <h2>AMM Pool</h2>
-
-            <div class="info">
-
-                <div>
-                    <strong>ETH Reserve:</strong>
-                    <span id="reserveETH">-</span>
-                </div>
-
-                <div>
-                    <strong>CFT Reserve:</strong>
-                    <span id="reserveCFT">-</span>
-                </div>
-
-                <div>
-                    <strong>Your LP Shares:</strong>
-                    <span id="userLPShares">-</span>
-                </div>
-
-                <div>
-                    <strong>Total LP Shares:</strong>
-                    <span id="totalLPShares">-</span>
-                </div>
-
-                <div>
-                    <strong>Constant Product K:</strong>
-                    <span id="poolK">-</span>
-                </div>
-
-                <div>
-                    <strong>Spot price (1 CFT):</strong>
-                    <span id="priceEthPerCft">-</span>
-                </div>
-
-                <div>
-                    <strong>Spot price (1 ETH):</strong>
-                    <span id="priceCftPerEth">-</span>
-                </div>
-
-            </div>
-
-            <button
-                class="secondary"
-                onclick="refreshPool()"
-            >
-                Refresh Pool
-            </button>
-
-        </section>
-
+      <div class="card"><h2>Create campaign</h2><label>Goal (ETH)</label><input id="campaignGoalInput" type="number" step="0.0001"><label>Duration (seconds)</label><input id="campaignDuration" type="number" value="3600"><button onclick="createCampaign()">Create campaign</button></div>
+      <div class="card"><h2>Contribute</h2><label>Campaign ID</label><input id="contributeId" type="number"><label>Contribution (ETH)</label><input id="contributeAmount" type="number" step="0.0001"><button onclick="contribute()">Contribute ETH</button></div>
+      <div class="card"><h2>Campaign actions</h2><label>Campaign ID</label><input id="actionCampaignId" type="number"><button onclick="claimTokens()">Claim CFT rewards</button><button class="secondary" onclick="claimRefund()">Claim refund</button><button class="danger" onclick="withdrawFunds()">Withdraw successful campaign</button></div>
+      <div class="card"><h2>Campaign lookup</h2><label>Campaign ID</label><input id="lookupCampaignId" type="number"><button class="secondary" onclick="lookupCampaign()">Load campaign</button><div id="campaignDetails" class="info">No campaign loaded.</div></div>
     </div>
+  </section>
 
-
-    <div id="statusBox" class="status">
-        Connect MetaMask to begin.
+  <section id="liquidity" class="panel">
+    <div class="grid">
+      <div class="card"><h2>ETH/CFT pool</h2><div id="poolDetails" class="info">Connect to load pool data.</div><button class="secondary" onclick="refreshPool()">Refresh pool</button></div>
+      <div class="card"><h2>Add liquidity</h2><label>CFT amount</label><input id="addLiquidityToken" type="number" step="0.01"><label>ETH amount</label><input id="addLiquidityEth" type="number" step="0.0001"><button onclick="addLiquidity()">Approve and add liquidity</button></div>
+      <div class="card"><h2>Remove liquidity</h2><label>LP shares</label><input id="removeLiquidityShares" type="number" step="0.000000000000000001"><button class="danger" onclick="removeLiquidity()">Remove liquidity</button></div>
+      <div class="card"><h2>Swap ETH/CFT</h2><label>Direction</label><select id="swapDirection"><option value="eth">ETH to CFT</option><option value="cft">CFT to ETH</option></select><label>Amount</label><input id="swapAmount" type="number" step="0.000000000000000001"><label>Minimum output</label><input id="swapMinOut" type="number" step="0.000000000000000001" value="0"><button onclick="swapPool()">Swap with slippage protection</button></div>
     </div>
+  </section>
 
-</div>
+  <section id="staking" class="panel"><div class="grid">
+    <div class="card"><h2>Stake LP tokens</h2><div id="stakeDetails" class="info">-</div><label>LP amount</label><input id="stakeAmount" type="number" step="0.000000000000000001"><button onclick="stake()">Approve and stake</button><button class="secondary" onclick="claimStakeRewards()">Claim rewards</button></div>
+    <div class="card"><h2>Withdraw LP tokens</h2><label>LP amount</label><input id="withdrawStakeAmount" type="number" step="0.000000000000000001"><button class="danger" onclick="withdrawStake()">Withdraw stake</button></div>
+    <div class="card"><h2>Fund reward emissions</h2><p class="muted">Requires RWD approval and is normally an admin operation.</p><label>RWD amount</label><input id="fundRewardAmount" type="number" step="0.000000000000000001"><button onclick="fundRewards()">Approve and fund</button></div>
+  </div></section>
 
+  <section id="governance" class="panel"><div class="grid">
+    <div class="card"><h2>Create proposal</h2><label>Target contract</label><input id="proposalTarget" class="address"><label>ETH value</label><input id="proposalValue" type="number" value="0"><label>Calldata (hex)</label><textarea id="proposalData" placeholder="0x"></textarea><label>Description</label><input id="proposalDescription"><button onclick="propose()">Create proposal</button></div>
+    <div class="card"><h2>Vote / lifecycle</h2><label>Proposal ID</label><input id="proposalId" type="number"><button onclick="vote(true)">Vote for</button><button class="secondary" onclick="vote(false)">Vote against</button><button class="secondary" onclick="queueProposal()">Queue proposal</button><button class="danger" onclick="executeProposal()">Execute ready proposal</button></div>
+  </div></section>
 
-<!-- ethers.js v6 -->
+  <section id="treasury" class="panel"><div class="grid">
+    <div class="card"><h2>Vault status</h2><div id="vaultDetails" class="info">-</div><button class="secondary" onclick="refreshVault()">Refresh vault</button></div>
+    <div class="card"><h2>Deposit CFT</h2><label>CFT assets</label><input id="vaultDepositAssets" type="number" step="0.000000000000000001"><button onclick="vaultDeposit()">Approve and deposit</button></div>
+    <div class="card"><h2>Mint vault shares</h2><label>Shares</label><input id="vaultMintShares" type="number" step="0.000000000000000001"><button onclick="vaultMint()">Approve and mint</button></div>
+    <div class="card"><h2>Withdraw / redeem</h2><label>Amount</label><input id="vaultAmount" type="number" step="0.000000000000000001"><button onclick="vaultWithdraw()">Withdraw assets</button><button class="danger" onclick="vaultRedeem()">Redeem shares</button></div>
+  </div></section>
+
+  <section id="dex" class="panel"><div class="grid">
+    <div class="card"><h2>Pair lookup</h2><label>Token A</label><input id="pairTokenA" class="address"><label>Token B</label><input id="pairTokenB" class="address"><button onclick="lookupPair()">Find pair</button><div id="pairDetails" class="info">-</div></div>
+    <div class="card"><h2>Create pair</h2><label>Token A</label><input id="createPairA" class="address"><label>Token B</label><input id="createPairB" class="address"><button onclick="createPair()">Create pair</button></div>
+    <div class="card"><h2>ERC-20 liquidity</h2><label>Token A</label><input id="routerTokenA" class="address"><label>Token B</label><input id="routerTokenB" class="address"><label>Token A amount</label><input id="routerAmountA" type="number"><label>Token B amount</label><input id="routerAmountB" type="number"><label>Recipient</label><input id="routerRecipient" class="address"><button onclick="routerAddLiquidity()">Approve both and add</button></div>
+    <div class="card"><h2>ERC-20 swap</h2><label>Path (comma-separated addresses)</label><input id="routerPath" class="address"><label>Amount in</label><input id="routerAmountIn" type="number"><label>Minimum output</label><input id="routerMinOut" type="number" value="0"><button onclick="routerSwap()">Approve and swap</button></div>
+  </div></section>
+
+  <section id="admin" class="panel"><div class="grid">
+    <div class="card"><h2>Token operations</h2><label>Recipient</label><input id="tokenRecipient" class="address"><label>Amount</label><input id="tokenAmount" type="number"><button onclick="transferCft()">Transfer CFT</button><button class="danger" onclick="burnCft()">Burn CFT</button><label>New minter (owner only)</label><input id="newMinter" class="address"><button class="secondary" onclick="setMinter()">Set minter</button></div>
+    <div class="card"><h2>Oracle</h2><div id="oracleDetails" class="info">-</div><button class="secondary" onclick="readOracle()">Read latest price</button><label>Mock price answer</label><input id="mockAnswer" type="number"><button onclick="setMockAnswer()">Update mock feed</button></div>
+    <div class="card"><h2>Flash loan experiment</h2><p class="muted">Local security fixture. The receiver must implement the expected callback.</p><label>Token address</label><input id="flashToken" class="address"><label>Amount</label><input id="flashAmount" type="number"><label>Receiver</label><input id="flashReceiver" class="address"><label>Callback data</label><textarea id="flashData" placeholder="0x"></textarea><button onclick="flashLoan()">Execute flash loan</button></div>
+  </div></section>
+
+  <section id="console" class="panel"><div class="card"><h2>Contract console</h2><p class="muted">Use this for any deployed read/write function not represented by a guided workflow. Arguments must be JSON; payable value is ETH.</p><label>Contract</label><select id="consoleContract"></select><label>Function signature</label><input id="consoleSignature" placeholder="balanceOf(address)"><label>Arguments JSON</label><textarea id="consoleArgs" placeholder='["0x..."]'></textarea><label>ETH value</label><input id="consoleValue" type="number" value="0"><button onclick="consoleCall()">Call function</button><div id="consoleResult" class="info">-</div></div></section>
+
+  <div id="statusBox" class="status">Connect MetaMask to begin.</div>
+</main>
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.17.0/dist/ethers.umd.min.js"></script>
-
-<!-- Replace the values in this file with the addresses from the Ganache deployment. -->
 <script src="local-contracts.js"></script>
-
 <script src="app.js"></script>
-
 </body>
 </html>
